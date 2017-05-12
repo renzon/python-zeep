@@ -42,6 +42,7 @@
           <all>
             <element name="tickerSymbol" type="string"/>
             <element name="account" type="tns:account" minOccurs="0" />
+            <element name="Address" type="tns:Address" minOccurs="0" />
             <element ref="tns:country" minOccurs="0"/>
           </all>
         </complexType>

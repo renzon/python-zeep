@@ -13,7 +13,7 @@ from zeep.transports import Transport
 
 @pytest.mark.requests
 def test_parse_soap_wsdl():
-    client = Client('tests/wsdl_files/soap.wsdl', transport=Transport(),)
+    client = Client('./wsdl_files/soap.wsdl', transport=Transport(),)
 
     response = """
         <?xml version="1.0"?>
@@ -32,7 +32,6 @@ def test_parse_soap_wsdl():
     client.set_ns_prefix('stoc', 'http://example.com/stockquote.xsd')
 
     with requests_mock.mock() as m:
-        m.post('http://example.com/stockquote', text=response)
         account_type = client.get_type('stoc:account')
         account = account_type(id=100)
         account.user = 'mvantellingen'
@@ -40,10 +39,16 @@ def test_parse_soap_wsdl():
         country.name = 'The Netherlands'
         country.code = 'NL'
 
+        address_type = client.get_type('stoc:Address')
+        address=address_type(
+            NameFirst='Fortunato', NameLast='Couto', Email='foo@bar.com')
+
+        m.post('http://example.com/stockquote', text=response)
         result = client.service.GetLastTradePrice(
             tickerSymbol='foobar',
             account=account,
-            country=country)
+            country=country,
+            Address=address)
         assert result == 120.123
 
         request = m.request_history[0]
@@ -60,6 +65,11 @@ def test_parse_soap_wsdl():
                   <id>100</id>
                   <user>mvantellingen</user>
                 </account>
+                <Address>
+                    <NameFirst>Fortunato</NameFirst>
+                    <NameLast>Couto</NameLast>
+                    <Email>foo@bar.com</Email>
+                </Address>
                 <stoc:country>
                   <name>The Netherlands</name>
                   <code>NL</code>
